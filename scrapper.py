@@ -1,63 +1,68 @@
-from selenium import webdriver
-from bs4 import BeautifulSoup as soup
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
 import time
 import pandas as pd
 import re
+from selenium import webdriver
+from bs4 import BeautifulSoup as soup
+from webdriver_manager.chrome import ChromeDriverManager
 from langdetect import detect
 from datetime import datetime
 
 connection_driver = webdriver.Chrome(ChromeDriverManager().install())
 
-#loop for number of game pages
+# loop for number of game pages
+
 for i in range(70):
     data = pd.DataFrame(columns=['text', 'rating'])
     hrefs = []
 
-    connection_driver.get('https://www.metacritic.com/browse/games/release-date/available/pc/metascore?page='+str(i))
-    #connection_driver.maximize_window()
-
+    connection_driver.get('https://www.metacritic.com/browse/games/release-date/available/pc/metascore?page=' + str(i))
     time.sleep(3)
 
     html_source = connection_driver.page_source
     page_soup = soup(html_source, 'html.parser')
     href_divs = page_soup.findAll('td', {'class': 'clamp-image-wrap'})
-#loop for scanning href to games on actual game page
+
+    # loop for scanning href to games on actual game page
+
     for div in href_divs:
         div = str(div)
         start_href = 'a href='
         end_href = '"><img'
         href_start = div.index(start_href)
         href_end = div.index(end_href)
-        href = div[href_start + len(start_href)+1: href_end]
+        href = div[href_start + len(start_href) + 1: href_end]
         hrefs.append(href)
-    #print(hrefs)
-#loop for each game in games on actual page
+
+    # loop for each game in games on actual page
+
     for href in hrefs:
         print(f'Page number: {i}, Game: {href[9:]}, Number the game on page: {hrefs.index(href)} \n'
               f'Already {len(data)} comments stored\n')
-        #time.sleep(4)
-#opens a page with comments for game
-        connection_driver.get('https://www.metacritic.com'+href+'/user-reviews')
+
+        # opens a page with comments for game
+
+        connection_driver.get('https://www.metacritic.com' + href + '/user-reviews')
         actual_page_number = 0
         time.sleep(2)
-#check number of pages for comments
+
+        # check number of pages for comments
+
         html_source = connection_driver.page_source
         page_soup = soup(html_source, 'html.parser')
         if page_soup.find('li', {'class': 'page last_page'}):
             last_page_div = str(page_soup.find('li', {'class': 'page last_page'}))
-            #print(last_page_div)
             last_page_searching_end = '</a></li>'
             end = last_page_div.index(last_page_searching_end)
-            last_page_number = int(last_page_div[end-1: end])
+            last_page_number = int(last_page_div[end - 1: end])
         else:
             last_page_number = 1
 
-#loop each comment page number
+        # loop each comment page number
+
         for actual_page_number in range(last_page_number):
             if actual_page_number != 0:
-                connection_driver.get('https://www.metacritic.com' + href + '/user-reviews?page='+str(actual_page_number))
+                connection_driver.get(
+                    'https://www.metacritic.com' + href + '/user-reviews?page=' + str(actual_page_number))
 
             html_source = connection_driver.page_source
             page_soup = soup(html_source, 'html.parser')
@@ -88,18 +93,17 @@ for i in range(70):
                 text = re.sub(r'<.*?>', '', text)
                 text = text.replace('\n', ' ')
 
-##check if comment is written in english
+                # check if comment is written in english
+
                 try:
                     if detect(text) != 'en':
                         continue
                 except:
                     continue
 
-                #print('HHHHHH'+text)
                 row = {'rating': rating, 'text': text}
                 data = data.append(row, ignore_index=True)
-                #print(row)
         time_start = datetime.now()
-        data.to_csv('data_page'+str(i)+'.csv')
+        data.to_csv('data_page' + str(i) + '.csv')
         time_end = datetime.now()
         print(f'Csv creating time: {time_end - time_start}')
