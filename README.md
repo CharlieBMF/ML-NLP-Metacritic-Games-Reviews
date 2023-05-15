@@ -73,8 +73,6 @@ Taking into account the length of the text for a given rating:
 
 The set was divided into a test set with a factor of 0.2. As a result, the bow transformer was ~110k words.
 Pipeline is defined as follows
-
-Some basic Git commands are:
 ```python
 pipeline = Pipeline([
     ('bow', CountVectorizer()),
