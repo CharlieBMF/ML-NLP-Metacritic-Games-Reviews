@@ -72,7 +72,7 @@ Taking into account the length of the text for a given rating:
 # NLP
 
 The set was divided into a test set with a factor of 0.2. As a result, the bow transformer was ~110k words.
-Pipeline is defined as follows
+Pipeline is defined as follows:
 ```python
 pipeline = Pipeline([
     ('bow', CountVectorizer()),
